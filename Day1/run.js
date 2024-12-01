@@ -15,9 +15,31 @@ function solve(list1 = [], list2 = []){
     const result = list1.reduce((acc, next,index) => {
         acc += Math.abs(next - list2[index])
         return acc;
-    },0)
+    }, 0)
 
     console.log("the answer is", result)
 }
 
-solve(one,two)
+function countOccurrences(list = []) {
+    return list.reduce((acc, next) => {
+        if (acc.has(next)) {
+            acc.set(next, acc.get(next) + 1)
+        } else {
+            acc.set(next, 1)
+        }
+        return acc
+    }, new Map())
+}
+
+function solve2(list1 = [], list2 = []) {
+    const map1 = countOccurrences(list1.sort())
+    const map2 = countOccurrences(list2.sort())
+
+    let result = 0;
+    for (let [key, value] of map1) {
+        result += key * value * map2.get(key) || 0;
+    }
+    console.log("the answer two part 2 is:", result)
+}
+
+solve2(one, two)
