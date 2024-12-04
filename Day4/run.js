@@ -1,37 +1,46 @@
 const lines = require('fs').readFileSync("input", "utf-8").split("\n");
 
-const xmas = /X[\s\S]*?M[\s\S]*?A[\s\S]*?S/g
 
-const vertical_lines = []
-for (let i = 0; i < lines[0].length; i++) {
-    vertical_lines.push(lines.map(line => line[i]).join())
-}
+const safeGet = (x, y) => (lines[x] || [])[y]
 
-const diagonal_lines = []
-for (let j = 0; j < lines.length; j++) {
-    let line = []
-    let line_down = []
-    for (let i = 0; i < lines.length - j - 1; i++) {
-        line.push(lines[i][i + j]);
-        line_down.push((lines[i+j+1] || [])[i]);
-    }
-    if (line.length) {
-        diagonal_lines.push(line.join())
-    }
-    if (line_down.length) {
-        diagonal_lines.push(line_down.join())
+function searchXmas(i, j, x, y) {
+    if (safeGet(i + x, j + y) === "M" &&
+        safeGet(i + 2 * x, j + 2 * y) === "A" &&
+        safeGet(i + 3 * x, j + 3 * y) === "S") {
+        return true
     }
 }
 
-function countXmas(data) {
-    const horizontal = data;
-    const backwards = [...data].reverse().join("");
-    return (horizontal.match(xmas)?.length || 0) + (backwards.match(xmas)?.length || 0)
+function searchCross(i, j) {
+    if ((safeGet(i - 1, j - 1) === "M" && safeGet(i + 1, j + 1) === "S" ||
+            safeGet(i - 1, j - 1) === "S" && safeGet(i + 1, j + 1) === "M") &&
+        (safeGet(i - 1, j + 1) === "S" && safeGet(i + 1, j - 1) === "M" ||
+            safeGet(i - 1, j + 1) === "M" && safeGet(i + 1, j - 1) === "S")
+    ) {
+        return true;
+    }
 }
 
-const count = [...lines, ... vertical_lines, ...diagonal_lines]
-    .map(countXmas)
-    .reduce((a,b) => a+b)
+let countXmas = 0;
+let countCross = 0;
+for (let i = 0; i < lines.length; i++) {
+    for (let j = 0; j < lines.length; j++) {
+        if (lines[i][j] === "X") {
+            for (let dx = -1; dx <= 1; dx++) {
+                for (let dy = -1; dy <= 1; dy++) {
+                    if (searchXmas(i, j, dx, dy)) {
+                        countXmas++
+                    }
+                }
+            }
+        }
+        if (lines[i][j] === "A") {
+            if (searchCross(i, j)) {
+                countCross++;
+            }
+        }
+    }
+}
 
-console.log("part1", count)
-
+console.log("part1", countXmas)
+console.log("part2", countCross)
