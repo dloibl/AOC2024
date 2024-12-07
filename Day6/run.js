@@ -1,66 +1,37 @@
-const library = require('fs').readFileSync("input", "utf-8").split("\n");
+const equations = require('fs').readFileSync("input", "utf-8").trim().split("\n");
 
-let direction = "up";
-let pos = findStart(library, direction)
-library[pos[1]][pos[0]] = "."
+function solve() {
+    let correct = 0;
+    let sum = 0;
+    for (let eq of equations) {
+        const [left, right] = eq.split(": ")
+        const result = Number(left)
+        const operands = right.trim().split(" ").map(Number)
 
-function findStart(library, direction) {
-    for (let sy = 0; sy < library.length; sy++) {
-        const line = library[sy];
-        const sx = line.indexOf("^");
-        if (sx >= 0) {
-            return [sx, sy];
+        if (solvable(operands, result)) {
+            sum += result;
+            correct++
         }
     }
+    return sum
 }
 
-function turn() {
-    switch (direction) {
-        case "up":
-            return "right";
-        case "right":
-            return "down";
-        case "down":
-            return "left";
-        case "left":
-            return "up";
+const add = (ops) => ops[0] + ops[1]
+const mult = (ops) => ops[0] * ops[1]
+const concat = (ops) => Number("" + ops[0] + ops[1])
+
+function solvable(ops, result) {
+    if (ops.length === 1) {
+        return ops[0] === result;
     }
-}
-
-function move(pos, direction) {
-    switch (direction) {
-        case "up":
-            pos[1] -= 1;
-            break;
-        case "down":
-            pos[1] += 1;
-            break
-        case "left":
-            pos[0] -= 1;
-            break
-        case "right":
-            pos[0] += 1;
+    if (ops.length === 2) {
+        return add(ops) === result || mult(ops) === result || concat(ops) === result
     }
-    return pos
+    const next = ops.slice(0, 2);
+    const tail = ops.slice(2)
+    return solvable([add(next), ...tail], result) ||
+        solvable([mult(next), ...tail], result) ||
+        solvable([concat(next), ...tail], result)
 }
 
-function run() {
-    let exit = null
-    let visited = new Set()
-    let previous = [...pos]
-    while (exit == null) {
-        if (pos[0] < 0 || pos[1] < 0 || pos[0] >= library[0].length || pos[1] >= library.length-1) {
-            exit = true
-        } else if ((library[pos[1]] ||[])[pos[0]] === "#") {
-            pos = previous
-            direction = turn(direction)
-        } else {
-            visited.add(pos.join(","))
-        }
-        previous = [...pos]
-        pos = move(pos, direction)
-    }
-    return visited.size
-}
-
-console.log("visited", run())
+console.log("correct:", solve())
